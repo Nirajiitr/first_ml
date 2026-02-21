@@ -179,13 +179,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-8 pb-6 text-center">
-          <p className="text-xs text-zinc-600 tracking-wide">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 mb-0.5 animate-pulse" />
-            Connected to FastAPI · localhost:8000
-          </p>
-        </div>
+      
       </div>
 
       <style>{`
