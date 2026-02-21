@@ -1,18 +1,5 @@
 import { useState } from "react";
-
-function predict(iq, cgpa) {
-  const iqScore = (iq - 60) / 80;
-  const cgpaScore = (cgpa - 4) / 6;
-  const raw = 0.45 * iqScore + 0.55 * cgpaScore;
-  const probability = Math.max(0, Math.min(1, raw));
-  const chance = Math.round(probability * 100);
-  return {
-    placed: chance >= 52,
-    chance,
-    iqFactor: Math.round(iqScore * 100),
-    cgpaFactor: Math.round(cgpaScore * 100),
-  };
-}
+import axios from "axios";
 
 function SliderField({ label, value, min, max, display, onChange, percent }) {
   return (
@@ -48,14 +35,26 @@ export default function App() {
   const [cgpa, setCgpa] = useState(7.0);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handlePredict = () => {
+  const handlePredict = async () => {
     setLoading(true);
     setResult(null);
-    setTimeout(() => {
-      setResult(predict(iq, cgpa));
+    setError(null);
+
+    const res = await axios
+      .post("http://localhost:8000/predict", { iq, cgpa })
+      .catch(() => null);
+
+    if (!res) {
+      setError("Could not connect to the prediction server. Make sure your backend is running on port 8000.");
       setLoading(false);
-    }, 800);
+      return;
+    }
+
+    const placed = res.data.prediction === 1;
+    setResult({ placed });
+    setLoading(false);
   };
 
   return (
@@ -83,7 +82,7 @@ export default function App() {
           </span>
           <h1 className="text-3xl font-bold tracking-tight text-white leading-tight">
             Placement<br />
-            <span className="bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Predictor
             </span>
           </h1>
@@ -118,46 +117,63 @@ export default function App() {
           <button
             onClick={handlePredict}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Analyzing…" : "Run Prediction →"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Analyzing…
+              </span>
+            ) : (
+              "Run Prediction →"
+            )}
           </button>
+
+          {/* Error State */}
+          {error && (
+            <div className="mt-4 flex items-start gap-3 bg-rose-500/10 border border-rose-500/20 rounded-xl px-4 py-3">
+              <span className="text-rose-400 text-base mt-0.5">⚠</span>
+              <p className="text-xs text-rose-400 leading-relaxed">{error}</p>
+            </div>
+          )}
 
           {/* Result Card */}
           {result && (
-            <div className="mt-5 rounded-2xl border border-zinc-800 overflow-hidden">
-              {/* Verdict */}
-              <div className="bg-zinc-800/60 px-6 py-4">
-                <p className="text-xs tracking-widest uppercase text-zinc-500 mb-1">Prediction Result</p>
-                <p className={`text-2xl font-bold tracking-tight ${result.placed ? "bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent" : "text-rose-400"}`}>
-                  {result.placed ? "✓ Likely Placed" : "✗ At Risk"}
-                </p>
-              </div>
+            <div className="mt-5 rounded-2xl border overflow-hidden border-zinc-800">
 
-              {/* Progress Bar */}
-              <div className="bg-zinc-800/40 px-6 py-4 border-t border-zinc-800">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs tracking-widest uppercase text-zinc-500">Probability</span>
-                  <span className="text-base text-white font-medium">{result.chance}%</span>
+              {/* Verdict Banner */}
+              <div className={`px-6 py-5 flex items-center gap-4 ${result.placed ? "bg-emerald-500/10" : "bg-rose-500/10"}`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0 ${result.placed ? "bg-emerald-400/20" : "bg-rose-400/20"}`}>
+                  {result.placed ? "🎉" : "📚"}
                 </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${result.placed ? "bg-linear-to-r from-emerald-400 to-cyan-400" : "bg-linear-to-r from-rose-500 to-orange-400"}`}
-                    style={{ width: `${result.chance}%` }}
-                  />
+                <div>
+                  <p className="text-xs tracking-widest uppercase text-zinc-500 mb-0.5">Prediction Result</p>
+                  <p className={`text-xl font-bold tracking-tight ${result.placed ? "bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent" : "text-rose-400"}`}>
+                    {result.placed ? "Likely Placed ✓" : "Not Placed ✗"}
+                  </p>
                 </div>
               </div>
 
-              {/* Stats */}
+              {/* Input Summary */}
               <div className="grid grid-cols-2 border-t border-zinc-800">
                 <div className="px-6 py-4 border-r border-zinc-800 bg-zinc-800/20">
-                  <p className="text-xs tracking-widest uppercase text-zinc-500 mb-1">IQ Factor</p>
-                  <p className="text-lg text-white font-medium">{result.iqFactor}%</p>
+                  <p className="text-xs tracking-widest uppercase text-zinc-500 mb-1">IQ Score</p>
+                  <p className="text-lg text-white font-medium">{iq}</p>
                 </div>
                 <div className="px-6 py-4 bg-zinc-800/20">
-                  <p className="text-xs tracking-widest uppercase text-zinc-500 mb-1">CGPA Factor</p>
-                  <p className="text-lg text-white font-medium">{result.cgpaFactor}%</p>
+                  <p className="text-xs tracking-widest uppercase text-zinc-500 mb-1">CGPA</p>
+                  <p className="text-lg text-white font-medium">{cgpa.toFixed(1)}</p>
                 </div>
+              </div>
+
+              {/* Model note */}
+              <div className="bg-zinc-800/30 border-t border-zinc-800 px-6 py-3">
+                <p className="text-xs text-zinc-600">
+                  Raw model output: <span className="text-zinc-400 font-medium">prediction = {result.placed ? 1 : 0}</span>
+                </p>
               </div>
             </div>
           )}
@@ -167,7 +183,7 @@ export default function App() {
         <div className="px-8 pb-6 text-center">
           <p className="text-xs text-zinc-600 tracking-wide">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 mb-0.5 animate-pulse" />
-            Logistic regression · campus placement dataset
+            Connected to FastAPI · localhost:8000
           </p>
         </div>
       </div>
