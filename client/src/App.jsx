@@ -43,7 +43,7 @@ export default function App() {
     setError(null);
 
     const res = await axios
-      .post("http://localhost:8000/predict", { iq, cgpa })
+      .post(`${import.meta.env.VITE_SERVER_URL}/predict`, { iq, cgpa })
       .catch(() => null);
 
     if (!res) {
@@ -82,7 +82,7 @@ export default function App() {
           </span>
           <h1 className="text-3xl font-bold tracking-tight text-white leading-tight">
             Placement<br />
-            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Predictor
             </span>
           </h1>
@@ -117,7 +117,7 @@ export default function App() {
           <button
             onClick={handlePredict}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3.5 rounded-xl bg-linear-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold text-sm tracking-wider uppercase transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -151,7 +151,7 @@ export default function App() {
                 </div>
                 <div>
                   <p className="text-xs tracking-widest uppercase text-zinc-500 mb-0.5">Prediction Result</p>
-                  <p className={`text-xl font-bold tracking-tight ${result.placed ? "bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent" : "text-rose-400"}`}>
+                  <p className={`text-xl font-bold tracking-tight ${result.placed ? "bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent" : "text-rose-400"}`}>
                     {result.placed ? "Likely Placed ✓" : "Not Placed ✗"}
                   </p>
                 </div>

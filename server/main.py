@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 from typing import Annotated
 import pickle
 import pandas as pd
-
+import os
+from dotenv import load_dotenv
 # Load model and scaler
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
@@ -14,7 +15,8 @@ with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
 app = FastAPI()
-origins = ["http://localhost:5173"]
+load_dotenv()
+origins = [os.getenv("CLIENT_URL")]
 
 app.add_middleware(
     CORSMiddleware,

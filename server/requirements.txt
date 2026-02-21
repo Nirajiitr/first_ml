@@ -1,0 +1,10 @@
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.10.6  # Updated to newer version
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+pandas==2.2.3
+scikit-learn==1.5.2
+mlxtend==0.22.0
+pickle-mixin==1.0.2
+python-dotenv==0.21.0
